@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbeitszeitrechner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .checkbox-container {
+            display:block;
+            text-transform: uppercase;
+            width: auto;
+            display:inline-block;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-align: left;
+        }
+        input, button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            white-space: pre-line;
+        }
+        .progress-bar-container {
+            margin-top: 20px;
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 25px;
+            overflow: hidden;
+            height: 30px;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            text-align: center;
+            color: white;
+            line-height: 30px;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .progress-bar span {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            color: white;
+            font-weight: bold;
+        }
+        .overtime {
+            background-color: #ff5733;
+        }
+        #estimatedTime {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        .input-group button {
+            width: auto;
+            padding: 0 15px;
+        }
+        /* Popup Buttons Container */
+        .popup-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .popup-buttons button {
+            flex: 1;
+            padding: 10px;
+        }
+        /* Slider Container */
+        .slider-container {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .slider-container label {
+            margin-bottom: 5px;
+            display: block;
+            font-weight: bold;
+        }
+        .slider-value {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #555;
+            text-align: right;
+        }
+        /* Popup CSS */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover, .close:focus {
+            color: black;
+        }
+        .modal-content input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .modal-content button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background-color: #45a049;
+        }
+        .current-worktime, .current-breaktime {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        /* Checkbox Container */
+        .checkbox-container {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        /* Updated CSS */
+        .hidden-checkbox {
+            display: none;
+        }
+
+        .button-label {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-label:hover {
+            background-color: rgb(65, 149, 68);
+        }
+
+        .hidden-checkbox:checked + .button-label {
+            background-color: rgb(65, 149, 68);
+        }
+        :root {
+            --pulse-box-shadow: 35px;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0.2);
+            }
+            100% {
+                box-shadow: inset var(--pulse-box-shadow) 0 0 0 rgba(0, 0, 0, 0.01);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 1s infinite;
+        }
+        #progress-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .container.dark-mode {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+
+        input.dark-mode, button.dark-mode {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid #555555;
+        }
+
+        button.dark-mode {
+            background-color: #007bff;
+        }
+
+        button.dark-mode:hover {
+            background-color: #0056b3;
+        }
+
+        /* Switch styles */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Arbeitszeitrechner</h1>
+
+    <!-- Anzeige der aktuellen benötigten Arbeitszeit -->
+    <div class="current-worktime" id="currentWorktime">
+        Soll Arbeitszeit: 7:36
+    </div>
+
+    <!-- Anzeige der aktuellen Pausenzeit -->
+    <div class="current-breaktime" id="currentBreaktime">
+        Pausenzeit: 00:30
+    </div>
+
+    <label for="time1">Letzte "Kommen" Zeit:</label>
+    <input type="time" id="time1" required>
+
+    <!-- Updated HTML -->
+    <div class="input-group">
+        <input type="time" id="time2" required>
+        <input type="checkbox" id="currentTimeCheckbox" class="hidden-checkbox">
+        <label for="currentTimeCheckbox" class="button-label">Aktuelle Uhrzeit</label>
+    </div>
+
+    <label for="additionalTime">Tagessumme bis jetzt (hh:mm):</label>
+    <input type="time" id="additionalTime" value="00:00" required>
+
+    <!-- Updated HTML -->
+    <button type="button" id="calculateButton" onclick="toggleCalculate()">Start</button>
+
+    <div id="result"></div>
+
+    <div class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar">
+            <span id="progress-text"></span>
+        </div>
+    </div>
+
+    <div id="estimatedTime"></div>
+
+    <!-- Slider für Überstunden -->
+    <div class="slider-container">
+        <label for="overtimeSlider">Gewünschte Überstunden:</label>
+        <input type="range" id="overtimeSlider" min="0" max="144" step="1" value="0">
+        <div class="slider-value" id="overtimeValue">0 Minuten</div>
+    </div>
+
+
+    <!-- Popup-Buttons nebeneinander -->
+    <div class="popup-buttons">
+        <button id="openRequiredPopup"><i class="fas fa-cog"></i></button>
+        <button id="openBreakPopup">Pausenzeit ändern</button>
+    </div>
+
+    <!-- Popup for changing required work time -->
+    <div id="requiredModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeRequiredModal">&times;</span>
+            <h2>Soll Arbeitszeit ändern</h2>
+            <label for="requiredTime">Neue Arbeitszeit (hh:mm):</label>
+            <input type="time" id="requiredTime" required>
+            <label for="brutogehalt">Bruttogehalt (€):</label>
+            <input type="number" id="brutogehalt" required>
+            <button type="button" onclick="saveRequiredTime()">Speichern</button>
+        </div>
+    </div>
+
+    <!-- Popup for changing break time -->
+    <div id="breakModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeBreakModal">&times;</span>
+            <h2>Pausenzeit ändern</h2>
+            <label for="breakTime">Geplante Pausenzeit (hh:mm):</label>
+            <input type="time" id="breakTime" required>
+            <div class="checkbox-container">
+                <input type="checkbox" id="excludeBreak" name="excludeBreak">
+                <label for="excludeBreak">Heute schon mind 30 min Pause gemacht?</label>
+            </div>
+            <button type="button" onclick="saveBreakTime()">Speichern</button>
+        </div>
+    </div>
+    <div class="switch-container">
+        <label class="switch">
+            <input type="checkbox" id="darkModeSwitch">
+            <span class="slider round"></span>
+        </label>
+        Dark Mode
+    </div>
+</div>
+
+
+<script>
+    // Standard benötigte Arbeitszeit und Pausenzeit in Minuten
+    const defaultRequiredMinutes = 7 * 60 + 36; // 7:36
+    const defaultBreakMinutes = 30; // 00:30
+    let gehaltbruto = 1030;
+
+    // Function to set the current time
+    function setCurrentTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('time2').value = `${hours}:${minutes}`;
+    }
+
+    // Function to toggle the button state and start/stop the interval
+    function toggleCalculate() {
+        const button = document.getElementById('calculateButton');
+        if (button.innerText === 'Start') {
+            button.innerText = 'Stop';
+            startAutoCalculate();
+        } else {
+            button.innerText = 'Start';
+            stopAutoCalculate();
+        }
+    }
+
+    // Function to start auto-calculating the difference
+    function startAutoCalculate() {
+        window.calculateInterval = setInterval(() => {
+            calculateDifference();
+            triggerPulseAnimation();
+        }, 1000); // Refresh every second
+    }
+
+    // Function to trigger the pulse animation
+    function triggerPulseAnimation() {
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.classList.remove('pulse-animation');
+        // Trigger reflow to restart the animation
+        void progressBar.offsetWidth;
+        progressBar.classList.add('pulse-animation');
+    }
+
+    // Function to stop auto-calculating the difference
+    function stopAutoCalculate() {
+        clearInterval(window.calculateInterval);
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.classList.remove('pulse-animation');
+    }
+
+    // Function to handle the checkbox state
+    function handleCurrentTimeCheckbox() {
+        const checkbox = document.getElementById('currentTimeCheckbox');
+        const time2Field = document.getElementById('time2');
+
+        if (checkbox.checked) {
+            time2Field.disabled = true;
+            time2Field.style.backgroundColor = '#e0e0e0'; // Optional: change background color to grey
+            setCurrentTime();
+            startAutoRefresh();
+        } else {
+            time2Field.disabled = false;
+            time2Field.style.backgroundColor = ''; // Reset background color
+            stopAutoRefresh();
+        }
+    }
+
+    // Function to start auto-refreshing the current time
+    function startAutoRefresh() {
+        window.currentTimeInterval = setInterval(setCurrentTime, 1000); // Refresh every second
+    }
+
+    // Function to stop auto-refreshing the current time
+    function stopAutoRefresh() {
+        clearInterval(window.currentTimeInterval);
+    }
+
+
+
+    // Event listener for the checkbox
+    document.getElementById('currentTimeCheckbox').addEventListener('change', handleCurrentTimeCheckbox);
+
+    let newminute = 0;
+    let seconds = 0;
+
+    // Function to calculate the time difference
+    function calculateDifference() {
+        const time1 = document.getElementById('time1').value;
+        const time2 = document.getElementById('time2').value;
+        const additionalTime = document.getElementById('additionalTime').value;
+        const overtimeMinutes = parseInt(document.getElementById('overtimeSlider').value, 10);
+        const excludeBreak = document.getElementById('excludeBreak').checked;
+
+        if (!time1 || !time2) {
+            document.getElementById('result').innerText = 'Bitte Letzte "Kommen" Zeit und Aktuelle Uhrzeit eingeben.';
+            return;
+        }
+
+        const [hours1, minutes1] = time1.split(':').map(Number);
+        const [hours2, minutes2] = time2.split(':').map(Number);
+
+        const totalMinutes1 = hours1 * 60 + minutes1;
+        const totalMinutes2 = hours2 * 60 + minutes2;
+        let differenceMinutes = totalMinutes2 - totalMinutes1;
+
+        if (differenceMinutes < 0) {
+            differenceMinutes += 24 * 60;
+        }
+
+        let additionalMinutes = 0;
+        if (additionalTime) {
+            const [addHours, addMinutes] = additionalTime.split(':').map(Number);
+            additionalMinutes = addHours * 60 + addMinutes;
+        }
+
+        const totalMinutes = differenceMinutes + additionalMinutes;
+
+        const storedRequiredTime = localStorage.getItem('requiredTime');
+        const storedBreakTime = localStorage.getItem('breakTime');
+        const requiredMinutes = storedRequiredTime ? parseTimeToMinutes(storedRequiredTime) : defaultRequiredMinutes;
+        const breakMinutes = storedBreakTime ? parseTimeToMinutes(storedBreakTime) : defaultBreakMinutes;
+
+        const referenceMinutes = excludeBreak ? requiredMinutes : requiredMinutes + (breakMinutes / 2);
+
+        let resultText = '';
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const estimatedTimeElem = document.getElementById('estimatedTime');
+
+        if (totalMinutes > referenceMinutes) {
+            if (newminute == totalMinutes) {
+                seconds = seconds + 1/60;
+            }
+            else {
+                console.log('else');
+                seconds = 0;
+                newminute = totalMinutes;
+            }
+            const percentage = ((totalMinutes + seconds ) / referenceMinutes) * 100;
+            const money = percentage * 49 / 100;
+            const overtimeActualMinutes = totalMinutes - referenceMinutes;
+            const overtimeHours = Math.floor(overtimeActualMinutes / 60);
+            const overtimeRemainingMinutes = overtimeActualMinutes % 60;
+            resultText = `Überstunden: ${overtimeHours} Stunden und ${overtimeRemainingMinutes} Minuten.`;
+            progressBar.style.width = "100%";
+            progressBar.classList.add('overtime');
+            progressText.innerText = `Überstunden ${money.toFixed(2)}€`;
+            estimatedTimeElem.innerText = '';
+        } else {
+            const remainingMinutes = referenceMinutes - totalMinutes;
+            const remainingHours = Math.floor(remainingMinutes / 60);
+            const remainingMinutesRest = remainingMinutes % 60;
+            if (newminute == totalMinutes) {
+                seconds = seconds + 1/60;
+            }
+            else {
+                console.log('else');
+                seconds = 0;
+                newminute = totalMinutes;
+            }
+            const percentage = ((totalMinutes + seconds ) / referenceMinutes) * 100;
+            const money = percentage * gehaltbruto / 21 / 100; //monatsgehalt / arbeitstage / 100
+            progressBar.style.width = `${percentage}%`;
+            progressBar.classList.remove('overtime');
+            progressText.innerText = `${percentage.toFixed(3)}% (${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m) ${money.toFixed(2)}€`;
+
+            const remainingOvertimeMinutes = referenceMinutes + overtimeMinutes - totalMinutes;
+            const remainingOvertimeHours = Math.floor(remainingOvertimeMinutes / 60);
+            const remainingOvertimeMinutesRest = remainingOvertimeMinutes % 60;
+
+            if (overtimeMinutes === 0) {
+                resultText = `Es fehlen noch ${remainingHours} Stunden und ${remainingMinutesRest} Minuten bis zur Soll Arbeitszeit.`;
+            } else {
+                resultText = `Es fehlen noch ${remainingOvertimeHours} Stunden und ${remainingOvertimeMinutesRest} Minuten bis zur gewünschten Überstundenzeit.`;
+            }
+
+            const currentTime = new Date();
+            currentTime.setMinutes(currentTime.getMinutes() + remainingMinutes + (excludeBreak ? 0 : breakMinutes / 2) + overtimeMinutes);
+            const futureHours = String(currentTime.getHours()).padStart(2, '0');
+            const futureMinutes = String(currentTime.getMinutes()).padStart(2, '0');
+
+            estimatedTimeElem.innerText = `Voraussichtliche Zeit: ${futureHours}:${futureMinutes}`;
+        }
+
+        document.getElementById('result').innerText = resultText;
+
+        //update the pulse animation
+        const percentage = (totalMinutes / referenceMinutes) * 100;
+        document.documentElement.style.setProperty('--pulse-box-shadow', `${percentage * 3.5}px`);
+        if (percentage == 100) {
+            confetti({
+                particleCount: 1500,
+                spread: 300,
+                origin: { y: 0.6 }
+            });
+        }
+        if (percentage >= 100) {
+            confetti({
+                particleCount: 3,
+                spread: 300,
+                origin: { y: 0.6 }
+            });
+        }
+    }
+    // Function to toggle dark mode
+    function toggleDarkMode() {
+        const isDarkMode = document.getElementById('darkModeSwitch').checked;
+        document.body.classList.toggle('dark-mode', isDarkMode);
+        document.querySelector('.container').classList.toggle('dark-mode', isDarkMode);
+        document.querySelectorAll('input, button').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
+        localStorage.setItem('darkMode', isDarkMode);
+    }
+
+    // Function to load dark mode preference
+    function loadDarkModePreference() {
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        document.getElementById('darkModeSwitch').checked = isDarkMode;
+        toggleDarkMode();
+    }
+
+    // Event listener for the dark mode switch
+    document.getElementById('darkModeSwitch').addEventListener('change', toggleDarkMode);
+
+    // Load dark mode preference on window load
+    window.onload = function() {
+        setCurrentTime();
+        loadData();
+        calculateDifference();
+        handleCurrentTimeCheckbox();
+        loadDarkModePreference(); // Load dark mode preference
+    };
+
+    // Funktion zum Parsen von hh:mm in Minuten
+    function parseTimeToMinutes(timeStr) {
+        if (typeof timeStr !== 'string') {
+            console.error('timeStr is not a string:', timeStr);
+            return 0;
+        }
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    // Funktion zum Formatieren von Minuten in hh:mm
+    function formatMinutesToTime(minutes) {
+        const hours = String(Math.floor(minutes / 60)).padStart(2, '0');
+        const mins = String(minutes % 60).padStart(2, '0');
+        return `${hours}:${mins}`;
+    }
+
+    // Funktion zum Speichern der Eingabedaten in Local Storage
+    function saveData() {
+        const time1 = document.getElementById('time1').value;
+        const additionalTime = document.getElementById('additionalTime').value;
+        const overtimeMinutes = document.getElementById('overtimeSlider').value;
+        const excludeBreak = document.getElementById('excludeBreak').checked;
+        localStorage.setItem('time1', time1);
+        localStorage.setItem('additionalTime', additionalTime);
+        localStorage.setItem('overtimeMinutes', overtimeMinutes);
+        localStorage.setItem('excludeBreak', excludeBreak);
+    }
+
+    // Funktion zum Laden der gespeicherten Daten aus Local Storage
+    function loadData() {
+        const time1 = localStorage.getItem('time1');
+        const additionalTime = localStorage.getItem('additionalTime');
+        const requiredTimeint = localStorage.getItem('requiredTime');
+        const breakTime = localStorage.getItem('breakTime');
+        const overtimeMinutes = localStorage.getItem('overtimeMinutes');
+        const excludeBreak = localStorage.getItem('excludeBreak') === 'true';
+
+        if (time1) document.getElementById('time1').value = time1;
+        if (additionalTime) document.getElementById('additionalTime').value = additionalTime;
+        if (requiredTimeint) {
+            document.getElementById('currentWorktime').innerText = `Soll Arbeitszeit: ${requiredTimeint}`;
+            const maxOvertime = 600 - parseTimeToMinutes(requiredTimeint); // 600 minutes minus required work time
+            document.getElementById('overtimeSlider').max = maxOvertime;
+        }
+        if (breakTime) {
+            document.getElementById('currentBreaktime').innerText = `Pausenzeit: ${breakTime}`;
+        }
+        if (overtimeMinutes) {
+            document.getElementById('overtimeSlider').value = overtimeMinutes;
+            updateOvertimeDisplay(overtimeMinutes, requiredTimeint);
+        } else {
+            updateOvertimeDisplay(0, requiredTimeint);
+        }
+        document.getElementById('excludeBreak').checked = excludeBreak;
+    }
+
+    // Function to update the overtime display
+    function updateOvertimeDisplay(minutes, requiredTimeint) {
+        const maxMinutes = 600 - parseTimeToMinutes(requiredTimeint); // 600 minutes minus required work time
+        if (minutes > maxMinutes) {
+            minutes = maxMinutes;
+        }
+        document.getElementById('overtimeValue').innerText = `${minutes} Minuten`;
+    }
+
+    // Event Listener for the Slider
+    document.getElementById('overtimeSlider').addEventListener('input', function() {
+        let minutes = parseInt(this.value, 10);
+        const requiredTimeint = localStorage.getItem('requiredTime');
+        updateOvertimeDisplay(minutes, requiredTimeint);
+        localStorage.setItem('overtimeMinutes', minutes);
+        const seconds2 = seconds;
+        calculateDifference();
+        seconds = seconds2;
+    });
+
+    // Load data and set current time on window load
+    window.onload = function() {
+        setCurrentTime();
+        loadData();
+        calculateDifference();
+        handleCurrentTimeCheckbox(); // Initialize the state of the checkbox
+
+        // Initialize the state of the breakTime field based on excludeBreak
+        const excludeBreak = localStorage.getItem('excludeBreak') === 'true';
+        const breakTimeField = document.getElementById('breakTime');
+        if (excludeBreak) {
+            breakTimeField.disabled = true;
+            breakTimeField.style.backgroundColor = '#e0e0e0';
+            breakTimeField.value = ''; // Clear the field
+        } else {
+            breakTimeField.disabled = false;
+            breakTimeField.style.backgroundColor = '';
+        }
+    };
+
+    // Beim Verlassen der Seite Daten speichern
+    window.onbeforeunload = saveData;
+
+    // Function to open the required time modal
+    document.getElementById('openRequiredPopup').addEventListener('click', function() {
+        document.getElementById('requiredModal').style.display = 'block';
+    });
+
+    // Function to open the break time modal
+    document.getElementById('openBreakPopup').addEventListener('click', function() {
+        document.getElementById('breakModal').style.display = 'block';
+    });
+
+    // Function to close the required time modal
+    document.getElementById('closeRequiredModal').addEventListener('click', function() {
+        document.getElementById('requiredModal').style.display = 'none';
+    });
+
+    // Function to close the break time modal
+    document.getElementById('closeBreakModal').addEventListener('click', function() {
+        document.getElementById('breakModal').style.display = 'none';
+    });
+
+    // Function to save the required time
+    // Function to save the required time and brutogehalt
+    function saveRequiredTime() {
+        const requiredTime = document.getElementById('requiredTime').value;
+        brutogehalt = document.getElementById('brutogehalt').value;
+        gehaltbruto = brutogehalt;
+        localStorage.setItem('requiredTime', requiredTime);
+        localStorage.setItem('brutogehalt', brutogehalt);
+        document.getElementById('currentWorktime').innerText = `Soll Arbeitszeit: ${requiredTime}`;
+        document.getElementById('requiredModal').style.display = 'none';
+
+        // Update the slider's maximum value dynamically
+        const maxOvertime = 600 - parseTimeToMinutes(requiredTime); // 600 minutes minus required work time
+        const overtimeSlider = document.getElementById('overtimeSlider');
+        overtimeSlider.max = maxOvertime;
+
+        // Adjust the slider value if it exceeds the new maximum
+        if (parseInt(overtimeSlider.value, 10) > maxOvertime) {
+            overtimeSlider.value = maxOvertime;
+        }
+
+        updateOvertimeDisplay(overtimeSlider.value, requiredTime);
+        calculateDifference();
+    }
+
+    // Load brutogehalt on window load
+    window.onload = function() {
+        setCurrentTime();
+        loadData();
+        calculateDifference();
+        handleCurrentTimeCheckbox();
+        loadDarkModePreference(); // Load dark mode preference
+
+        const storedBrutogehalt = localStorage.getItem('brutogehalt');
+        if (storedBrutogehalt) {
+            document.getElementById('brutogehalt').value = storedBrutogehalt;
+            gehaltbruto = parseFloat(storedBrutogehalt);
+        }
+    };
+
+    // Function to save the break time
+    function saveBreakTime() {
+        const breakTime = document.getElementById('breakTime').value;
+        const excludeBreak = document.getElementById('excludeBreak').checked;
+        localStorage.setItem('breakTime', breakTime);
+        localStorage.setItem('excludeBreak', excludeBreak);
+        document.getElementById('currentBreaktime').innerText = `Pausenzeit: ${breakTime}`;
+        document.getElementById('breakModal').style.display = 'none';
+        calculateDifference();
+    }
+
+    // Event listener to grey out the breakTime field when excludeBreak is checked
+    document.getElementById('excludeBreak').addEventListener('change', function() {
+        const breakTimeField = document.getElementById('breakTime');
+        if (this.checked) {
+            breakTimeField.disabled = true;
+            breakTimeField.style.backgroundColor = '#e0e0e0'; // Optional: change background color to grey
+            breakTimeField.value = ''; // Clear the field
+        } else {
+            breakTimeField.disabled = false;
+            breakTimeField.style.backgroundColor = ''; // Reset background color
+        }
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+</body>
+</html>
